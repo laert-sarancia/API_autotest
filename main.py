@@ -22,10 +22,10 @@ class YaDisk:
         if token:
             self.token = token
         else:
-            self.token = self.get_token()
+            self.token = self._get_token()
         self.session.auth = (self.user, self.pas)
 
-    def get_code(self):
+    def _get_code(self):
         print("Gets code")
         response = self.session.get(f"{self.auth_url}authorize?response_type=code&client_id={self.client_id}")
         print(f"{self.auth_url}/authorize?response_type=code&client_id={self.client_id}")
@@ -38,11 +38,11 @@ class YaDisk:
         else:
             raise Exception(f"Response status code = {response.status_code}")
 
-    def get_token(self):
+    def _get_token(self):
         print("Gets token")
         data = {
             'grant_type': 'authorization_code',
-            'code': 5430877,  #self.get_code(),
+            'code': self._get_code(),
             'client_id': self.client_id,
             'client_secret': self.client_secret
         }
@@ -61,7 +61,14 @@ class YaDisk:
     def create_folder(self, folder: str):
         print(f"{self.direct_url}?path={folder}")
         response = self.session.put(f"{self.direct_url}?path={folder}",
-                                    headers={'Authorization': f'Basic {self.token}'})
+                                    headers={'Authorization': f'Bearer {self.token}'})
+        print(response.status_code)  # 201
+        return response
+
+    def move(self, path_from: str, path_to: str):
+        print(f"{self.direct_url}/move?from={path_from}&path={path_to}")
+        response = self.session.post(f"{self.direct_url}/move?from={path_from}&path={path_to}",
+                                    headers={'Authorization': f'Bearer {self.token}'})
         print(response.status_code)  # 201
         return response
 
@@ -109,10 +116,11 @@ if __name__ == '__main__':
     )
 
     disk.create_folder(Work.folder1)
-    # disk.delete(f"{Work.folder1}/{Work.file1}")
+    # disk.delete(f"{Work.folder1}")
 
-    # disk.upload(f"{Work.folder1}/{Work.file1}")
-    #
+    # disk.upload(f"{Work.file1}")
+    # disk.move(f"{Work.file1}", f"{Work.folder1}/{Work.file1}")
+
     # disk.download(f"{Work.folder1}/{Work.file1}")
     # disk.delete(f"{Work.folder1}/{Work.file1}")
     # disk.upload(f"{Work.folder1}/{Work.file2}")
