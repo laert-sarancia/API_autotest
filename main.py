@@ -26,20 +26,15 @@ class YaDisk:
         self.session.auth = (self.user, self.pas)
 
     def _get_code(self):
-        print("Gets code")
         response = self.session.get(f"{self.auth_url}authorize?response_type=code&client_id={self.client_id}")
-        print(f"{self.auth_url}/authorize?response_type=code&client_id={self.client_id}")
-        print(response.status_code)
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, 'lxml')
-            print(soup.h1)
 
             return soup.h1.text
         else:
             raise Exception(f"Response status code = {response.status_code}")
 
     def _get_token(self):
-        print("Gets token")
         data = {
             'grant_type': 'authorization_code',
             'code': self._get_code(),
@@ -48,9 +43,6 @@ class YaDisk:
         }
         url1 = f"{self.auth_url}/token"
         loging = self.session.post(url1, data=data)
-        print(url1)
-        print(loging.status_code)
-        print(loging.text)
         return loging
 
     @staticmethod
@@ -59,41 +51,36 @@ class YaDisk:
             f.write(response.text)
 
     def create_folder(self, folder: str):
-        print(f"{self.direct_url}?path={folder}")
         response = self.session.put(f"{self.direct_url}?path={folder}",
-                                    headers={'Authorization': f'Bearer {self.token}'})
-        print(response.status_code)  # 201
+                                    headers={'Authorization': f'OAuth {self.token}'})
         return response
 
     def move(self, path_from: str, path_to: str):
         print(f"{self.direct_url}/move?from={path_from}&path={path_to}")
         response = self.session.post(f"{self.direct_url}/move?from={path_from}&path={path_to}",
-                                    headers={'Authorization': f'Bearer {self.token}'})
-        print(response.status_code)  # 201
+                                    headers={'Authorization': f'OAuth {self.token}'})
         return response
 
     def upload(self, path: str):
         print(f"{self.direct_url}/upload?path={path}")
         response = self.session.get(f"{self.direct_url}/upload?path={path}",
-                                    headers={'Authorization': f'Bearer {self.token}'})
-        print(response.status_code)  # 200
+                                    headers={'Authorization': f'OAuth {self.token}'})
         d_resp = dict(response.text)
         if d_resp["method"] == "PUT":
             response1 = self.session.put(f"{d_resp['href']}",
-                                         headers={'Authorization': f'Bearer {self.token}'})
+                                         headers={'Authorization': f'OAuth {self.token}'})
         else:
             response1 = self.session.get(f"{d_resp['href']}",
-                                         headers={'Authorization': f'Bearer {self.token}'})  # TODO add exception
-        print(response1.status_code)  # 201
+                                         headers={'Authorization': f'OAuth {self.token}'})  # TODO add exception
         return response1
 
     def download(self, path: str):
         response = self.session.get(f"{self.direct_url}/download?path={path}",
-                                    headers={'Authorization': f'Bearer {self.token}'})
+                                    headers={'Authorization': f'OAuth {self.token}'})
         print(response.status_code)  # 200
         d_resp = dict(response.text)
         response1 = self.session.get(f"{d_resp['href']}",
-                                     headers={'Authorization': f'Bearer {self.token}'})  # TODO add exception
+                                     headers={'Authorization': f'OAuth {self.token}'})  # TODO add exception
         print(response1.status_code)  # 200
         return response1
 
@@ -103,8 +90,7 @@ class YaDisk:
         else:
             perm = ""
         response = self.session.get(f"{self.direct_url}/download?path={path}{perm}",
-                                    headers={'Authorization': f'Bearer {self.token}'})
-        print(response.status_code)  # 202
+                                    headers={'Authorization': f'OAuth {self.token}'})
         return response
 
 
